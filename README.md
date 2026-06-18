@@ -1,40 +1,40 @@
 # cryptool
 
-Un piccolo tool da riga di comando per **cifrare e decifrare file usando una password**.
+A small command-line tool to **encrypt and decrypt files using a password**.
 
-La chiave non viene mai salvata da nessuna parte: viene ricalcolata ogni volta a partire dalla tua password tramite `PBKDF2HMAC`. Senza la password giusta (e senza il salt), il file resta illeggibile.
-
----
-
-## Caratteristiche
-
-- Cifratura simmetrica di qualsiasi file con una password scelta da te
-- Chiave derivata dalla password al volo, mai scritta su disco
-- Salt casuale generato a ogni cifratura
-- Blocco temporaneo di 5 minuti dopo 5 password sbagliate consecutive
-- Opzione `--delete` per cancellare il file originale subito dopo la cifratura
+The key is never stored anywhere: it's re-derived from your password every time using `PBKDF2HMAC`. Without the right password (and the salt), the file stays unreadable.
 
 ---
 
-## Come funziona
+## Features
 
-| Componente | Dettaglio |
-|------------|-----------|
-| Cifratura | `Fernet` (AES a 128 bit in modalità CBC + HMAC, dalla libreria `cryptography`) |
-| Derivazione chiave | `PBKDF2HMAC` con `SHA-256`, 100.000 iterazioni, chiave da 32 byte |
-| Salt | 16 byte casuali, salvati in `salt.salt` |
-| Input password | nascosto a schermo tramite `getpass` |
-
-Il flusso è semplice: dalla password + salt si ricava una chiave, con quella chiave si cifra/decifra. Il salt viene salvato in chiaro (è normale: il salt non è un segreto, serve solo a rendere unica la derivazione della chiave ed evitare attacchi precalcolati).
+- Symmetric encryption of any file with a password of your choice
+- Key derived from the password on the fly, never written to disk
+- Random salt generated on every encryption
+- Temporary 5-minute lockout after 5 consecutive wrong passwords
+- `--delete` flag to remove the original file right after encryption
 
 ---
 
-## Requisiti
+## How it works
+
+| Component | Detail |
+|-----------|--------|
+| Encryption | `Fernet` (AES-128 in CBC mode + HMAC, from the `cryptography` library) |
+| Key derivation | `PBKDF2HMAC` with `SHA-256`, 100,000 iterations, 32-byte key |
+| Salt | 16 random bytes, stored in `salt.salt` |
+| Password input | hidden from the screen via `getpass` |
+
+The flow is simple: from password + salt a key is derived, and that key is used to encrypt/decrypt. The salt is stored in plaintext (that's fine: a salt isn't a secret, it just makes the key derivation unique and prevents precomputed attacks).
+
+---
+
+## Requirements
 
 - Python 3.x
-- Libreria `cryptography`
+- The `cryptography` library
 
-Installa la dipendenza:
+Install the dependency:
 
 ```bash
 pip install cryptography
@@ -42,51 +42,51 @@ pip install cryptography
 
 ---
 
-## Utilizzo
+## Usage
 
-### Cifrare un file
+### Encrypt a file
 
 ```bash
 python cryptool.py encrypt input.txt output.enc
 ```
 
-Ti viene chiesta una password, il contenuto di `input.txt` viene cifrato e salvato in `output.enc`. Viene creato anche il file `salt.salt`, **necessario per decifrare in seguito**.
+You'll be prompted for a password, the contents of `input.txt` get encrypted and saved to `output.enc`. A `salt.salt` file is also created, which is **required to decrypt later**.
 
-Per cancellare automaticamente il file originale dopo la cifratura:
+To automatically delete the original file after encryption:
 
 ```bash
 python cryptool.py encrypt input.txt output.enc --delete
 ```
 
-### Decifrare un file
+### Decrypt a file
 
 ```bash
 python cryptool.py decrypt placeholder output.enc
 ```
 
-In fase di `decrypt` il tool legge il **secondo argomento** (il file cifrato), chiede la password e, se è corretta, stampa il contenuto decifrato direttamente a schermo.
+When decrypting, the tool reads the **second argument** (the encrypted file), asks for the password, and if it's correct, prints the decrypted contents straight to the screen.
 
-> Il primo argomento è comunque richiesto dal parser ma in decifratura non viene usato: puoi passare un nome qualsiase. Conta solo il secondo file.
+> The first argument is still required by the parser but isn't used during decryption: you can pass any name. Only the second file matters.
 
-> ⚠️ Per decifrare serve il file `salt.salt` generato durante la cifratura. Se lo perdi, il file non è più recuperabile.
-
----
-
-## Sicurezza
-
-- La password non viene mai salvata né mostrata
-- La chiave viene ricalcolata ogni volta partendo da password + salt, quindi non resta nessuna chiave su disco
-- Dopo 5 tentativi falliti parte un countdown di 5 minuti prima di poter riprovare
+> ⚠️ Decryption needs the `salt.salt` file generated during encryption. If you lose it, the file can't be recovered.
 
 ---
 
-## Note
+## Security
 
-- Progetto nato a scopo **didattico**, per mettere in pratica crittografia simmetrica e derivazione di chiavi in Python.
-- Non pensato per proteggere dati ad alto rischio in ambienti reali: per quello esistono strumenti maturi e auditati (es. `age`, `gpg`, VeraCrypt).
+- The password is never stored or displayed
+- The key is recomputed every time from password + salt, so no key is ever left on disk
+- After 5 failed attempts, a 5-minute countdown starts before you can try again
 
 ---
 
-## Licenza
+## Notes
 
-MIT — sentiti libera di usarlo e modificarlo.
+- This is an **educational** project, built to practice symmetric cryptography and key derivation in Python.
+- Not meant to protect high-risk data in real-world environments: for that, use mature and audited tools (e.g. `age`, `gpg`, VeraCrypt).
+
+---
+
+## License
+
+MIT — feel free to use and modify it.
